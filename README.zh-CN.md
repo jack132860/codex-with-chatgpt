@@ -30,11 +30,12 @@ Agent（Codex），然后去倒杯咖啡：
 2. 下载：把 https://github.com/XiaoDuoYa/codex-with-chatgpt 克隆到
    ~/codex-with-chatgpt（已存在就 git pull 更新）。
 3. 构建：在该目录里执行 corepack pnpm install 和 corepack pnpm build。
-4. 安装 Skill：把仓库里的 skill/SKILL.md 复制到
-   ~/.codex/skills/codex-with-chatgpt/SKILL.md，并把文件中
+4. 安装 Skill：把仓库里的 skill/ 目录完整复制到
+   ~/.codex/skills/codex-with-chatgpt/，并把该目录下 SKILL.md 中的
    "The codex-with-chatgpt checkout lives at:" 那一行的路径改成实际克隆路径。
-5. 首次配置：按 SKILL.md 里的 first-time setup 流程执行
-  （运行 c2c setup，用内置浏览器打开 ChatGPT 配置连接器并输入配对码）。
+   （保留 skills 目录下其他既有内容，含空格路径加引号，切勿使用 rm -rf 或 rsync --delete）。
+5. 首次配置：按 references/setup.md 里的 first-time setup 流程执行
+  （先探检内置浏览器可用性，再执行 c2c setup 并在内置浏览器中配置连接器与输入配对码）。
    全程只用内置浏览器，禁止打开任何第三方浏览器。
 6. 只有遇到需要我登录（ChatGPT / Cloudflare）、验证码或两步验证时才叫我，
    而且一次只告诉我一个动作。
@@ -42,12 +43,11 @@ Agent（Codex），然后去倒杯咖啡：
    Tunnel、端口这些词，不要向我解释；出了问题先自己修。
 ```
 
-**更新**：Skill 每天自动检查一次 GitHub，有新版本会自动更新并继续任务，
-无需任何操作；也可以随时对 Codex 说"更新 Codex with ChatGPT"。
+**更新**：对 Codex 说「更新 Codex with ChatGPT」可执行已授权的维护更新（详见 `references/maintenance.md`）。日常工作不会在后台自动升级；若源码有修改应予以保留，并在独立分支／worktree 中比对整合，不依赖自动重新套用补丁。
 
 ## 安装 → 配置 → 使用（手动版）
 
-1. 安装 Codex Skill：把 `skill/` 复制到 `~/.codex/skills/codex-with-chatgpt/`。
+1. 安装 Codex Skill：把 `skill/` 目录完整复制到 `~/.codex/skills/codex-with-chatgpt/`，并修改 `SKILL.md` 中的克隆路径。
 2. 对 Codex 说：**"使用 Codex with ChatGPT 完成首次配置。"**
 3. 之后正常使用：**"使用 Codex with ChatGPT，帮我实现 XXX。"**
 

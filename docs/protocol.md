@@ -1,6 +1,6 @@
 # C2C Agent Protocol
 
-Control plane: Computer Use (tiny structured messages typed into the ChatGPT UI).
+Control plane: Browser actions via supported browser API (tiny structured messages typed into the ChatGPT UI, without unrequested native desktop workarounds).
 Data plane: MCP (ChatGPT pulls files, diffs, search results itself).
 
 Never mix the two: control messages carry state, never content.
@@ -38,7 +38,7 @@ Local checkpoint values (session only):
 | `EXECUTING` | Codex is applying the current PLAN |
 | `EXECUTED_LOCAL` | Recorded locally; EXECUTED not yet typed |
 | `EXECUTED_SENT` | EXECUTED typed; waiting for review |
-| `DONE` / `BLOCKED` | Terminal; DONE should `--clear-checkpoint` |
+| `DONE` / `BLOCKED` | Terminal. For DONE: clear checkpoint ONLY when the objective is complete AND (independent acceptance is not required for the task, OR all applicable required fresh Sol/Astra checks have passed on the unchanged candidate). If any required check is pending, FAIL, INCONCLUSIVE, or unavailable, retain checkpoint and evidence in a not-delivered state; see skill task-loop completion contract. |
 
 Legacy sessions without a checkpoint keep the old loop. The first normal
 iteration after this version writes a checkpoint automatically.

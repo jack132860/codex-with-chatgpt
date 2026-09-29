@@ -46,11 +46,12 @@ Detailed docs below are in English · 详细中文文档见 **[README.zh-CN.md](
 2. 下载：把 https://github.com/XiaoDuoYa/codex-with-chatgpt 克隆到
    ~/codex-with-chatgpt（已存在就 git pull 更新）。
 3. 构建：在该目录里执行 corepack pnpm install 和 corepack pnpm build。
-4. 安装 Skill：把仓库里的 skill/SKILL.md 复制到
-   ~/.codex/skills/codex-with-chatgpt/SKILL.md，并把文件中
+4. 安装 Skill：把仓库里的 skill/ 目录完整复制到
+   ~/.codex/skills/codex-with-chatgpt/，并把该目录下 SKILL.md 中的
    "The codex-with-chatgpt checkout lives at:" 那一行的路径改成实际克隆路径。
-5. 首次配置：按 SKILL.md 里的 first-time setup 流程执行
-  （运行 c2c setup，用内置浏览器打开 ChatGPT 配置连接器并输入配对码）。
+   （保留 skills 目录下其他既有内容，含空格路径加引号，切勿使用 rm -rf 或 rsync --delete）。
+5. 首次配置：按 references/setup.md 里的 first-time setup 流程执行
+  （先探检内置浏览器可用性，再执行 c2c setup 并在内置浏览器中配置连接器与输入配对码）。
    全程只用内置浏览器，禁止打开任何第三方浏览器。
 6. 只有遇到需要我登录（ChatGPT / Cloudflare）、验证码或两步验证时才叫我，
    而且一次只告诉我一个动作。
@@ -72,12 +73,14 @@ I am a non-technical user — do everything yourself:
 2. Download: clone https://github.com/XiaoDuoYa/codex-with-chatgpt into
    ~/codex-with-chatgpt (if it already exists, git pull to update).
 3. Build: inside that folder run `corepack pnpm install` then `corepack pnpm build`.
-4. Install the Skill: copy skill/SKILL.md to
-   ~/.codex/skills/codex-with-chatgpt/SKILL.md, and update the line
-   "The codex-with-chatgpt checkout lives at:" to the actual clone path.
-5. First-time setup: follow the SKILL.md "first-time setup" workflow
-   (run c2c setup, configure the ChatGPT connector in the BUILT-IN browser,
-   enter the pairing code). Never open a third-party browser.
+4. Install the Skill: copy the full `skill/` directory into
+   `~/.codex/skills/codex-with-chatgpt/`, and update the line
+   "The codex-with-chatgpt checkout lives at:" in `SKILL.md` to the actual clone path.
+   (Preserve other contents in the skills directory, quote paths with spaces, and avoid `rm -rf` or `rsync --delete`).
+5. First-time setup: follow the references/setup.md "first-time setup" workflow
+   (verify in-app browser availability first before C2C mutations, then run c2c setup,
+   configure the ChatGPT connector in the BUILT-IN browser, and enter the pairing code).
+   Never open a third-party browser.
 6. Only interrupt me for logins (ChatGPT / Cloudflare), CAPTCHAs or 2FA —
    and give me exactly ONE action at a time.
 7. When done, show me the ✓ checklist and confirm the file-read test passed.
@@ -86,10 +89,7 @@ I am a non-technical user — do everything yourself:
 ```
 
 
-**Updates · 更新** — The Skill checks GitHub once a day and updates itself when a
-new version is released; no action needed. You can also say "更新 Codex with ChatGPT"
-anytime. / Skill 每天自动检查一次 GitHub，有新版本会自动更新，无需任何操作；
-也可以随时对 Codex 说"更新 Codex with ChatGPT"。
+**Updates · 更新** — Say "更新 Codex with ChatGPT" to run authorized maintenance (see `references/maintenance.md`). Maintenance does not auto-upgrade in the background during ordinary tasks. Dirty source checkouts preserve local changes; inspect and integrate updates from a known base on a separate branch/worktree rather than relying on automated patch reapplication. / 对 Codex 说「更新 Codex with ChatGPT」可執行已授權的維護更新（詳見 `references/maintenance.md`）。日常工作不會在背景自動升級；若原始碼有修改應予以保留，並在獨立分支／worktree 中比對整合，不依賴自動重新套用補丁。
 
 ---
 
@@ -98,7 +98,7 @@ anytime. / Skill 每天自动检查一次 GitHub，有新版本会自动更新�
 
 ## Install → Setup → Use (manual)
 
-1. Install the Codex Skill: copy `skill/` to `~/.codex/skills/codex-with-chatgpt/`.
+1. Install the Codex Skill: copy the full `skill/` directory (including `references/`) to `~/.codex/skills/codex-with-chatgpt/`, and update the checkout path in `SKILL.md`.
 2. Tell Codex: **"Set up Codex with ChatGPT."** (中文: "使用 Codex with ChatGPT 完成首次配置。")
 3. Use Codex normally: **"Use Codex with ChatGPT to implement XXX."**
 
