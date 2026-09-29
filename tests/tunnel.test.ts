@@ -6,9 +6,13 @@ import { PassThrough } from "node:stream";
 import { findBinary } from "../src/tunnel/detect.js";
 import {
   CloudflaredQuickTunnel,
+  DEFAULT_QUICK_TUNNEL_START_TIMEOUT_MS,
+  TUNNEL_START_TIMEOUT_MS,
   parseQuickTunnelUrl,
   type CloudflaredQuickTunnelOptions,
 } from "../src/tunnel/cloudflared.js";
+import { adminFetch } from "../src/process/daemon.js";
+import type { RuntimeState } from "../src/bridge/runtime.js";
 import { normalizeNamedTunnelHostname } from "../src/tunnel/cloudflared-named.js";
 import { hostnameSlug, parseZoneInput, suggestedNamedHostname } from "../src/tunnel/hostname.js";
 import {
@@ -61,6 +65,7 @@ function healthResponse(): Response {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   while (stateDirs.length) cleanup(stateDirs.pop()!);
   if (previousStateDir === undefined) delete process.env.C2C_STATE_DIR;
   else process.env.C2C_STATE_DIR = previousStateDir;
@@ -217,6 +222,64 @@ describe("CloudflaredQuickTunnel", () => {
     expect(cancelBody).toHaveBeenCalledTimes(1);
     await tunnel.stop();
   });
+
+  it("succeeds when readiness is delayed beyond 45s within default 120s budget", async () => {
+    vi.useFakeTimers();
+    const child = new FakeCloudflaredProcess();
+    const spawnImpl = vi.fn(() => child as unknown as ChildProcess);
+    const startTime = Date.now();
+    const fetchImpl = vi.fn(async () => {
+      // Simulate initial DNS propagation delay / NXDOMAIN for the first 80s
+      if (Date.now() - startTime < 80_000) {
+        throw new TypeError("fetch failed");
+      }
+      return healthResponse();
+    });
+
+    const tunnel = new CloudflaredQuickTunnel(undefined, "cloudflared", {
+      spawnImpl,
+      fetchImpl,
+      // startTimeoutMs intentionally omitted to test default 120_000ms budget
+    });
+    const starting = tunnel.start(3333);
+    announceUrl(child);
+
+    // Advance 80s: passes old 45s threshold and reaches readiness
+    await vi.advanceTimersByTimeAsync(80_000);
+
+    await expect(starting).resolves.toBe(QUICK_URL);
+    expect(tunnel.status()).toMatchObject({ running: true, url: QUICK_URL });
+    await tunnel.stop();
+  });
+
+  it("cleans up and times out when readiness is not achieved within default 120s budget", async () => {
+    vi.useFakeTimers();
+    const child = new FakeCloudflaredProcess();
+    const spawnImpl = vi.fn(() => child as unknown as ChildProcess);
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+
+    const tunnel = new CloudflaredQuickTunnel(undefined, "cloudflared", {
+      spawnImpl,
+      fetchImpl,
+      // startTimeoutMs intentionally omitted to test default 120_000ms budget
+    });
+    const starting = tunnel.start(3333);
+    announceUrl(child);
+
+    // At 119s (past old 45s, but before 120s): still waiting, process not killed
+    await vi.advanceTimersByTimeAsync(119_000);
+    expect(child.kill).not.toHaveBeenCalled();
+
+    // Advance past 120s deadline
+    const advance = vi.advanceTimersByTimeAsync(2_000);
+    await expect(starting).rejects.toThrow(/timed out/i);
+    await advance;
+
+    expect(child.kill).toHaveBeenCalledWith("SIGTERM");
+    expect(tunnel.status()).toMatchObject({ running: false, url: null });
+  });
 });
 
 describe("tunnel transport protocol", () => {
@@ -346,5 +409,68 @@ describe("tunnel preference state", () => {
       expect(result.state.preference).toBe("quick");
       expect(result.userMessage).toMatch(/临时地址/);
     });
+  });
+});
+
+describe("caller deadline policy", () => {
+  it("configures enclosing start timeout to at least 150s, exceeding the 120s tunnel budget", () => {
+    expect(DEFAULT_QUICK_TUNNEL_START_TIMEOUT_MS).toBe(120_000);
+    expect(TUNNEL_START_TIMEOUT_MS).toBeGreaterThanOrEqual(150_000);
+    expect(TUNNEL_START_TIMEOUT_MS).toBeGreaterThan(DEFAULT_QUICK_TUNNEL_START_TIMEOUT_MS);
+  });
+
+  it("enclosing deadline allows delayed completion beyond 90s that would have failed old limit", async () => {
+    vi.useFakeTimers();
+    const runtime: RuntimeState = {
+      service: "c2c-bridge",
+      version: "0.1.3",
+      workspaceId: "ws-test",
+      workspaceRoot: "/test",
+      pid: 1234,
+      port: 3333,
+      adminToken: "test-token",
+      publicUrl: null,
+      startedAt: new Date().toISOString(),
+    };
+
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(
+      (_input, init) =>
+        new Promise<Response>((resolve, reject) => {
+          const signal = init?.signal as AbortSignal | undefined;
+          if (signal?.aborted) {
+            reject(new Error("aborted"));
+            return;
+          }
+          signal?.addEventListener("abort", () => reject(new Error("aborted")));
+          setTimeout(() => {
+            resolve(new Response(JSON.stringify({ url: QUICK_URL }), { status: 200 }));
+          }, 120_000);
+        })
+    );
+
+    try {
+      // With new enclosing deadline (150s), a 120s delayed response completes successfully
+      const fetchPromise = adminFetch<{ url: string }>(
+        runtime,
+        "POST",
+        "/admin/tunnel/start",
+        TUNNEL_START_TIMEOUT_MS
+      );
+      await vi.advanceTimersByTimeAsync(120_000);
+      await expect(fetchPromise).resolves.toEqual({ url: QUICK_URL });
+
+      // In contrast, the former 90s enclosing timeout aborts before the 120s response
+      const oldFetchPromise = adminFetch<{ url: string }>(
+        runtime,
+        "POST",
+        "/admin/tunnel/start",
+        90_000
+      );
+      const advanceOld = vi.advanceTimersByTimeAsync(90_000);
+      await expect(oldFetchPromise).rejects.toThrow();
+      await advanceOld;
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });

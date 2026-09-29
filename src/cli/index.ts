@@ -9,6 +9,7 @@ import { adminFetch, ensureBridge, stopBridge } from "../process/daemon.js";
 import { Workspace } from "../workspace/manager.js";
 import { AuthStore } from "../auth/store.js";
 import { detectTunnelBinaries } from "../tunnel/detect.js";
+import { TUNNEL_START_TIMEOUT_MS } from "../tunnel/cloudflared.js";
 import {
   chooseQuickTunnel,
   hasCloudflaredCert,
@@ -203,7 +204,7 @@ async function ensureBridgeAndTunnel(
         "NEED_CLOUDFLARED: cloudflared is not installed. Install it first (macOS: brew install cloudflared)."
       );
     }
-    const result = await adminFetch<TunnelStartResponse>(runtime, "POST", "/admin/tunnel/start", 90_000);
+    const result = await adminFetch<TunnelStartResponse>(runtime, "POST", "/admin/tunnel/start", TUNNEL_START_TIMEOUT_MS);
     if (!result.url) throw new Error(result.message ?? "Tunnel start failed");
     info = await adminFetch<AdminInfo>(runtime, "GET", "/admin/info");
     mcpUrl = `${result.url}/mcp`;
@@ -573,7 +574,7 @@ program
           if (!binaries.cloudflared) {
             report.tunnel = { ok: false, detail: "NEED_CLOUDFLARED" };
           } else {
-            const started = await adminFetch<TunnelStartResponse>(runtime, "POST", "/admin/tunnel/start", 90_000);
+            const started = await adminFetch<TunnelStartResponse>(runtime, "POST", "/admin/tunnel/start", TUNNEL_START_TIMEOUT_MS);
             if (started.url) {
               const previousUrl = lastEndpoint?.publicUrl;
               currentUrl = started.url;

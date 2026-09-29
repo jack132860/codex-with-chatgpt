@@ -52,6 +52,9 @@ export function parseQuickTunnelUrl(line: string): string | null {
   return null;
 }
 
+export const DEFAULT_QUICK_TUNNEL_START_TIMEOUT_MS = 120_000;
+export const TUNNEL_START_TIMEOUT_MS = 150_000;
+
 export interface CloudflaredQuickTunnelOptions {
   startTimeoutMs?: number;
   spawnImpl?: (
@@ -83,7 +86,7 @@ export class CloudflaredQuickTunnel implements TunnelProvider {
     private readonly binaryOverride?: string,
     options: CloudflaredQuickTunnelOptions = {}
   ) {
-    this.startTimeoutMs = options.startTimeoutMs ?? 45_000;
+    this.startTimeoutMs = options.startTimeoutMs ?? DEFAULT_QUICK_TUNNEL_START_TIMEOUT_MS;
     this.spawnImpl = options.spawnImpl ?? ((command, args, spawnOptions) => spawn(command, args, spawnOptions));
     this.fetchImpl = options.fetchImpl ?? ((input, init) => fetch(input, init));
   }
