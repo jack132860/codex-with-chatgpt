@@ -99,6 +99,8 @@ but is not evidence of lower total tokens across channels.
 
 - The codex-with-chatgpt checkout lives at: `<ACTUAL_CHECKOUT_PATH>`
   (installer/update MUST replace this line in the installed Skill with the user's actual checkout path.)
+- Codex home: let `<codex-home>` be a non-empty `CODEX_HOME` when set; otherwise
+  use `~/.codex` (`%USERPROFILE%\.codex` on Windows).
 - CLI: let `<checkout>` mean the path on the previous line; run
   `node "<checkout>/bin/c2c.js" <command>` (or `c2c <command>` if globally linked).
   Use `--json` only where the command supports it; check that subcommand's `--help`
@@ -135,3 +137,5 @@ Do not read all references by default. Load only the reference required for the 
 - **Browser UI Interactions**:
   Before performing any browser action, tab creation, navigation, or reply wait,
   read [references/browser.md](references/browser.md).
+
+- **ChatGPT-generated media**: read [references/media.md](references/media.md) for read-only image inspection and original-download import.

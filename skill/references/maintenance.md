@@ -28,15 +28,16 @@ Execute inside `<checkout>` (see Locations in `SKILL.md`):
    - If local changes or patches are present, **preserve them**. Do not run destructive `git stash` or assume automatic patch reapplication. Inspect differences and integrate from a known clean base in a separate worktree or branch as appropriate.
    - If clean, pull latest changes: `git pull --ff-only`.
 2. **Build artifacts**: `corepack pnpm install && corepack pnpm build`.
-3. **Re-install the skill**:
-   - Copy the entire `skill/` directory (including `references/`) to `~/.codex/skills/codex-with-chatgpt/`:
+3. **Re-install the skill** (resolve `<codex-home>` from Locations in `SKILL.md`):
+   - Copy the entire `skill/` directory (including `references/`) to `<codex-home>/skills/codex-with-chatgpt/`:
      ```bash
-     mkdir -p ~/.codex/skills/codex-with-chatgpt && cp -R skill/. ~/.codex/skills/codex-with-chatgpt/
+     mkdir -p "<codex-home>/skills/codex-with-chatgpt"
+     cp -R skill/. "<codex-home>/skills/codex-with-chatgpt/"
      ```
    - **Safety rules**:
      - Handle paths with spaces safely by quoting all paths.
      - Never run `rm -rf ~/.codex/skills` or `rsync --delete` against the parent skills directory, which would destroy unrelated skills.
-   - Replace `<ACTUAL_CHECKOUT_PATH>` in the installed `~/.codex/skills/codex-with-chatgpt/SKILL.md` with the absolute path of `<checkout>`.
+   - Replace `<ACTUAL_CHECKOUT_PATH>` in the installed `<codex-home>/skills/codex-with-chatgpt/SKILL.md` with the absolute path of `<checkout>`.
 4. **Refresh permissions and runtime**:
    - `c2c sandbox-allow --json`
    - `c2c restart -w <workspace>` (restarts the bridge process with new code)
