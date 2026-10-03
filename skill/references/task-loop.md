@@ -44,7 +44,7 @@ This reference defines the C2C planning and execution loop between Codex and Cha
    - `PLAN_RECEIVED`: Execute the existing plan. Do not `INIT`.
    - `INIT` with `waitingFor=GPT_PLAN`: Claim the tab and wait for the plan. Do not resend `INIT`.
    - `DONE`:
-     - **Canonical completion condition**: Clear checkpoint (`--clear-checkpoint`) ONLY when the objective is complete AND (independent acceptance is NOT required for this task, OR ALL applicable required fresh Sol/Astra checks have passed on the unchanged candidate).
+     - **Canonical completion condition**: Clear checkpoint (`--clear-checkpoint`) ONLY when the objective is complete AND (independent acceptance is NOT required for this task, OR ALL applicable required fresh GPT-6.1 Sol/Astra checks have passed on the unchanged candidate).
      - If any applicable required check is pending, FAIL, INCONCLUSIVE, or unavailable: **retain existing checkpoint and evidence** in a not-delivered state; do NOT clear checkpoint.
      - When the canonical completion condition is met:
        `c2c session set -w <ws> --state DONE --clear-checkpoint`
@@ -97,10 +97,10 @@ Produce a C2C PLAN message.
 
 ## Step 4: Execute Plan and Ownership Boundaries
 
-1. Execute the plan locally using Codex's own harness (tools, editing, and judgment; ChatGPT does not micromanage tool calls).
+1. Execute the plan through Codex's own harness and the applicable implementation route (normally delegated AGY medium, with the authorized fallback when unavailable). Codex owns dispatch, collection, verification, and delivery; ChatGPT does not micromanage tool calls.
 2. **Multi-model routing and acceptance contract**:
    - Codex execution ownership follows `~/.agents/core/model-routing.md` when applicable.
-   - Same-chat ChatGPT `REVIEW` or `DONE` replies are advisory collaboration only and **cannot substitute for required independent fresh Sol/Astra reviews**.
+   - Same-chat ChatGPT `REVIEW` or `DONE` replies are advisory collaboration only and **cannot substitute for required independent fresh GPT-6.1 Sol/Astra reviews**.
 3. Update checkpoint before execution:
   `c2c session set -w <ws> --protocol-state EXECUTING --waiting-for none --next-step "finish PLAN then record"`
 
@@ -156,13 +156,13 @@ Update checkpoint:
 
 1. ChatGPT reviews changes independently via MCP (`git_diff`, `read_file`, `test_status`, `execution_output`) and replies with `DONE`, `PLAN` (next iteration), or `BLOCKED`.
 2. **Loop limits**:
-   - Bounded by `maxIterations` in `.c2c.json` (default 12) AND core time and correction bounds.
-   - When either threshold is reached, pause and inform the user with the actual numbers:
+   - Bounded by `maxIterations` in `.c2c.json` (default 12) AND core task-wide cumulative time and slice correction bounds; changing models, channels, or slice names does not reset them.
+   - When either threshold is reached, preserve the candidate/checkpoint and reevaluate method, scope, and a new explicit bound. If continuing requires authorization beyond the existing task, pause dependent work and ask; do not add a ritual permission gate for already-authorized reversible work. When approval is needed, include the actual numbers:
      "已达到界限（实际完成 <actual_iterations> 轮协作，耗时 <actual_time>，触发原因：<trigger_reason>），是否继续？"
 3. **On DONE**:
    - Summarize the result in plain language.
    - **Acceptance Boundary**: A ChatGPT `DONE` protocol state cannot mark unaccepted work as delivered when independent acceptance (e.g. fresh-context review) is mandated by project core.
-   - **Canonical completion condition**: Clear checkpoint (`--clear-checkpoint`) ONLY when the objective is complete AND (independent acceptance is NOT required for this task, OR ALL applicable required fresh Sol/Astra checks have passed on the unchanged candidate).
+   - **Canonical completion condition**: Clear checkpoint (`--clear-checkpoint`) ONLY when the objective is complete AND (independent acceptance is NOT required for this task, OR ALL applicable required fresh GPT-6.1 Sol/Astra checks have passed on the unchanged candidate).
    - If any applicable required check is pending, FAIL, INCONCLUSIVE, or unavailable: **retain existing checkpoint and evidence** in a not-delivered state; do NOT call `--clear-checkpoint`.
    - When the canonical completion condition is met:
      `c2c session set -w <ws> --state DONE --clear-checkpoint`

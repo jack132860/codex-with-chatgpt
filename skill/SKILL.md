@@ -1,11 +1,11 @@
 ---
 name: codex-with-chatgpt
 description: >
-  Use ChatGPT (web) as the planning and review brain for Codex coding sessions,
-  while Codex keeps full execution ownership. Use when the user says
-  "使用 Codex with ChatGPT ..." / "Set up Codex with ChatGPT" / "用 ChatGPT 规划",
-  when they ask to connect ChatGPT to the current workspace, disconnect it,
-  or run a task through the ChatGPT planning loop.
+  Use ChatGPT (web) for planning and revision strategy when an authorized coding
+  task needs decomposition or replanning and the applicable model-routing policy
+  selects C2C. Also use for explicit Codex with ChatGPT requests, workspace
+  connection/disconnection, and the ChatGPT planning loop. Skip routine Q&A and
+  simple fully specified work that does not need planning. Codex owns execution.
 ---
 
 # Codex with ChatGPT
@@ -19,9 +19,22 @@ control messages between you and ChatGPT stay tiny (< 1 KB) — ChatGPT pulls
 whatever data it needs by itself.
 
 Codex execution ownership follows `~/.agents/core/model-routing.md` when applicable.
-Explicit C2C requests select ChatGPT collaboration, but same-chat `REVIEW` or `DONE`
-replies cannot substitute for required fresh Sol/Astra reviews. A protocol or checkpoint
-`DONE` cannot mark unaccepted work as delivered.
+Under that routing policy, general planning and revision strategy prefer C2C;
+explicit C2C requests also select ChatGPT collaboration. Simple fully specified
+work does not need an extra planning round. Preserve useful plans and return to
+ChatGPT for material gaps, changed assumptions, or replanning, not every small fix.
+
+If C2C is confirmed unavailable, preserve its checkpoint and report the limitation;
+the controller may use the policy's GPT-6.1 Sol medium planning fallback. Browser,
+login, consent, authorization, and repair gates below still apply; fallback does
+not permit bypassing them. An explicit ChatGPT-only requirement is not silently
+replaced. Record ChatGPT's observed selected model/setting separately; do not label
+it as a Codex model/effort or invent effective provider identity.
+
+Same-chat `REVIEW` or `DONE` replies cannot substitute for required fresh GPT-6.1
+Sol/Astra reviews. A protocol or checkpoint `DONE` cannot mark unaccepted work as
+delivered. Moving planning to ChatGPT reduces repeated Codex control-message input,
+but is not evidence of lower total tokens across channels.
 
 ## Golden Rules
 
